@@ -3,87 +3,147 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareerCraft – Home</title>
+    <title>CareerCraft – Dashboard</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>CareerCraft</header>
+    <div class="layout">
+        <!-- Sidebar Menu -->
+        <aside class="sidebar">
+            <h2 class="logo">CareerCraft</h2>
+            <ul class="menu">
+                <li>🏠 Home</li>
+                <li>📄 Dashboard</li>
+                <li>🧑‍🎓 Career Roles</li>
+                <li>📈 Paths</li>
+                <li>⚙️ Settings</li>
+            </ul>
+        </aside>
 
-    <section class="hero">
-        <h1>Build Your Future with Confidence</h1>
-        <p>Your personalized career guidance, skills tracking, and opportunity matching platform.</p>
-        <button class="cta-btn">Get Started</button>
-    </section>
+        <!-- Main Content -->
+        <main class="main">
+            <section class="profile">
+                <h1>Welcome, User</h1>
+                <p>Your personalized career dashboard.</p>
 
-    <section class="features">
-        <div class="card">
-            <h3>Career Suggestions</h3>
-            <p>Receive tailored career recommendations based on your skills and goals.</p>
-        </div>
-        <div class="card">
-            <h3>Skill Assessment</h3>
-            <p>Analyze your strengths and discover areas to improve.</p>
-        </div>
-        <div class="card">
-            <h3>Job Matching</h3>
-            <p>Find roles suited to your expertise and preferred path.</p>
-        </div>
-    </section>
+                <div class="profile-cards">
+                    <div class="p-card">
+                        <h3>Your Role Match</h3>
+                        <p>Software Developer – 87% match</p>
+                    </div>
+                    <div class="p-card">
+                        <h3>Next Skill to Learn</h3>
+                        <p>Data Structures & Algorithms</p>
+                    </div>
+                    <div class="p-card">
+                        <h3>Progress</h3>
+                        <p>Level 2 → Level 3</p>
+                    </div>
+                </div>
+            </section>
+        </main>
 
-    <!-- Login Section -->
-    <section class="login" style="text-align:center; padding:50px 20px;">
-        <h2 style="color:#7bbaff; font-size:32px;">Login to Continue</h2>
-        <div style="margin-top:25px; display:flex; justify-content:center;">
-            <div class="login-box" style="background:rgba(255,255,255,0.08); padding:25px; width:320px; border-radius:12px; backdrop-filter:blur(10px); box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-                <input type="text" placeholder="Email">
-                <input type="password" placeholder="Password">
-                <button class="cta-btn" style="width:100%;">Login</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Role Recommendation Section -->
-    <section class="roles" style="padding:40px 20px; text-align:center;">
-        <h2 style="color:#7bbaff; font-size:32px;">Recommended Roles for You</h2>
-        <div class="features" style="margin-top:30px;">
-            <div class="card">
-                <h3>Software Developer</h3>
-                <p>Ideal for analytical thinkers with strong coding skills.</p>
-            </div>
-            <div class="card">
-                <h3>Data Analyst</h3>
-                <p>Perfect for detail-oriented individuals who enjoy insights.</p>
-            </div>
-            <div class="card">
-                <h3>UI/UX Designer</h3>
-                <p>Great for creative minds interested in user-centric designs.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Career Paths Section -->
-    <section class="career-paths" style="padding:40px 20px; text-align:center;">
-        <h2 style="color:#7bbaff; font-size:32px;">Career Paths</h2>
-        <div class="features" style="margin-top:30px;">
-            <div class="card">
-                <h3>Software Developer Path</h3>
-                <p>Beginner → Junior Developer → Senior Developer → Tech Lead → Architect</p>
-            </div>
-            <div class="card">
-                <h3>Data Analyst Path</h3>
-                <p>Data Intern → Analyst → Senior Analyst → Data Scientist → Lead Analyst</p>
-            </div>
-            <div class="card">
-                <h3>UI/UX Designer Path</h3>
-                <p>Design Intern → Junior Designer → UX Researcher → Product Designer → Lead UX</p>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        © 2025 CareerCraft – Empowering Your Journey
-    </footer>
+        <!-- Signup Section (Right Side) -->
+        <section class="signup">
+            <h2>Create Account</h2>
+            <input type="text" placeholder="Name">
+            <input type="email" placeholder="Email">
+            <input type="password" placeholder="Password">
+            <button class="cta-btn">Sign Up</button>
+        </section>
+    </div>
 
     <script src="script.js"></script>
 </body>
 </html>
+
+<!-- ======================== styles.css ======================== -->
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0a0f24, #0e1b3f, #0b2b6b);
+    color: white;
+    height: 100vh;
+}
+
+.layout {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background: rgba(0,0,0,0.4);
+    padding: 20px;
+    backdrop-filter: blur(6px);
+}
+.sidebar .logo {
+    text-align: center;
+    margin-bottom: 20px;
+    color:#79a7ff;
+}
+.menu li {
+    list-style: none;
+    padding: 10px 0;
+    cursor: pointer;
+    color:#d1dcff;
+}
+.menu li:hover {
+    color:white;
+}
+
+/* Main Dashboard */
+.main {
+    flex: 1;
+    padding: 40px;
+}
+.profile-cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.p-card {
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 10px;
+    width: 250px;
+    backdrop-filter: blur(8px);
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Signup (Right side fixed) */
+.signup {
+    width: 300px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.signup input {
+    padding: 10px;
+    border:none;
+    border-radius: 6px;
+}
+
+.cta-btn {
+    padding: 12px;
+    background:#2d6cdf;
+    border:none;
+    border-radius:5px;
+    color:white;
+    cursor:pointer;
+}
+</style>
+
+<!-- ======================== script.js ======================== -->
+<script>
+// Simple signup button alert
+const signupBtn = document.querySelector('.signup .cta-btn');
+signupBtn.addEventListener('click', () => {
+    alert('Signup functionality coming soon!');
+});
+</script>
