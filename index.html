@@ -3,125 +3,733 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CareerPilot — Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>CareerCraft — AI Career Dashboard (Visual + Charts)</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ---------- THEME & RESET ---------- */
+    :root{
+      --bg1:#071028;
+      --bg2:#0b1b3a;
+      --accent:#3aa0ff;
+      --accent-2:#7b5cff;
+      --glass: rgba(255,255,255,0.06);
+      --muted: rgba(255,255,255,0.75);
+      --card-shadow: 0 12px 40px rgba(2,6,23,0.6);
+      --radius:14px;
+      --glass-2: rgba(255,255,255,0.04);
+    }
+    [data-theme="light"]{
+      --bg1:#f4f7ff; --bg2:#eaf0ff; --accent:#1b4eb3; --accent-2:#5a3cff;
+      --glass: rgba(0,0,0,0.04); --muted:#1b2b4a; --card-shadow: 0 12px 30px rgba(8,12,30,0.06);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;}
+    body{background: linear-gradient(160deg,var(--bg1),var(--bg2)); color:white; -webkit-font-smoothing:antialiased;}
+
+    /* ---------- LAYOUT ---------- */
+    .container{ max-width:1200px; margin:26px auto; padding:16px; display:grid; grid-template-columns: 260px 1fr 340px; gap:18px; }
+    @media (max-width:1100px){ .container{ grid-template-columns: 220px 1fr; } .right-col{ display:none } }
+    @media (max-width:760px){ .container{ grid-template-columns: 1fr; padding:12px } .sidebar{ position:fixed; left:-280px; top:0; height:100%; z-index:60; } .sidebar.open{ left:0 } .ham{ display:flex } .right-col{ display:none } }
+
+    /* ---------- SIDEBAR ---------- */
+    .sidebar{ background: var(--glass-2); padding:18px; border-radius:var(--radius); box-shadow:var(--card-shadow); backdrop-filter: blur(8px); }
+    .brand{ display:flex; align-items:center; gap:12px; margin-bottom:12px }
+    .logo{ width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:white }
+    .brand h2{ margin:0; color:var(--accent); font-size:18px }
+    .menu{ margin-top:12px; padding:0; list-style:none }
+    .menu li{ margin:8px 0; color:var(--muted); cursor:pointer; padding:8px; border-radius:8px }
+    .menu li:hover{ background: rgba(255,255,255,0.03); color:white }
+
+    .theme-row{ display:flex; gap:8px; align-items:center; margin-top:18px }
+    .small-btn{ background:transparent; border:1px solid rgba(255,255,255,0.06); padding:6px 8px; color:var(--muted); border-radius:8px; cursor:pointer }
+
+    /* ---------- MAIN ---------- */
+    .main{ background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding:20px; border-radius:var(--radius); box-shadow:var(--card-shadow); backdrop-filter: blur(6px) }
+    .top{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .welcome{ display:flex; gap:12px; align-items:center }
+    .avatar{ width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,var(--accent-2),var(--accent)); display:flex; align-items:center; justify-content:center; font-weight:700 }
+    .welcome h1{ margin:0; font-size:18px } .welcome p{ margin:0; color:var(--muted); font-size:13px }
+
+    /* ---------- HERO BANNER (office image + futuristic overlay) ---------- */
+    .hero{
+      margin-top:16px; border-radius:12px; overflow:hidden; display:grid; grid-template-columns: 1fr 360px; gap:16px; align-items:center;
+      background: linear-gradient(135deg, rgba(0,0,0,0.18), rgba(255,255,255,0.02));
+      padding:16px;
+    }
+    .hero-left{ padding:12px }
+    .hero h2{ margin:0 0 8px 0; font-size:22px; color:var(--accent) }
+    .hero p{ margin:0 0 12px 0; color:var(--muted) }
+    .cta{ background: linear-gradient(90deg,var(--accent),var(--accent-2)); padding:10px 14px; border-radius:10px; color:white; border:none; cursor:pointer }
+
+    .hero-right{
+      min-height:150px; border-radius:10px; overflow:hidden; position:relative; box-shadow:0 18px 40px rgba(2,6,23,0.5);
+    }
+    .hero-right img{ width:100%; height:100%; object-fit:cover; display:block; filter:contrast(1.02) saturate(1.06); }
+    .hero-overlay{
+      position:absolute; inset:0; background: linear-gradient(135deg, rgba(122,98,255,0.18), rgba(58,160,255,0.12)); mix-blend-mode:overlay;
+    }
+
+    /* ---------- CARDS GRID ---------- */
+    .cards{ display:grid; grid-template-columns: repeat(3,1fr); gap:14px; margin-top:16px }
+    @media (max-width:980px){ .cards{ grid-template-columns: repeat(2,1fr) } }
+    @media (max-width:560px){ .cards{ grid-template-columns: 1fr } }
+
+    .card{ background:var(--glass); padding:14px; border-radius:12px; box-shadow:var(--card-shadow); }
+    .card h3{ margin:0 0 8px 0; color:var(--accent) }
+    .card p{ margin:0; color:var(--muted) }
+
+    /* ---------- IMAGE GALLERY ---------- */
+    .img-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:12px; margin-top:16px }
+    @media (max-width:900px){ .img-grid{ grid-template-columns: repeat(2,1fr) } @media (max-width:520px){ .img-grid{ grid-template-columns:1fr } } }
+
+    .img-card{ position:relative; border-radius:12px; overflow:hidden; height:120px; box-shadow:0 12px 30px rgba(0,0,0,0.45) }
+    .img-card img{ width:100%; height:100%; object-fit:cover; display:block; filter:grayscale(0.08) contrast(1.02) }
+    .img-card .cap{ position:absolute; left:12px; bottom:12px; color:white; font-weight:600; text-shadow: 0 6px 16px rgba(0,0,0,0.6) }
+
+    /* ---------- RIGHT COLUMN ---------- */
+    .right-col{ padding:18px; border-radius:var(--radius); background:var(--glass-2); box-shadow:var(--card-shadow); backdrop-filter: blur(8px) }
+    .right-col h3{ margin-top:0; color:var(--accent) }
+
+    /* forms */
+    input, select{ width:100%; padding:10px; border-radius:8px; border:none; background:rgba(255,255,255,0.03); color:white; margin-bottom:10px }
+    label{ font-size:13px; color:var(--muted) }
+
+    /* charts placeholders */
+    .chart-wrap{ background:var(--glass); padding:12px; border-radius:10px; margin-top:12px }
+    canvas{ width:100% !important; height:220px !important; }
+
+    /* roles list */
+    .roles{ display:grid; gap:10px; margin-top:12px }
+    .role-card{ background:var(--glass); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center }
+    .role-desc{ display:block; color:var(--muted); font-size:13px }
+
+    /* path box */
+    #pathBox{ margin-top:14px; padding:14px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent) }
+
+    /* small util */
+    .muted{ color:var(--muted) }
+    .toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:18px; background:rgba(0,0,0,0.6); padding:10px 14px; border-radius:8px; display:none; color:white; z-index:200 }
+    .ham{ display:none; position:fixed; top:12px; left:12px; z-index:80 }
+  </style>
 </head>
 <body>
-  <header class="topnav">
-    <div class="container topnav-inner">
+
+  <!-- mobile hamburger -->
+  <div class="ham" id="hambWrap">
+    <button class="small-btn" id="hamBtn">☰</button>
+  </div>
+
+  <div class="container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <div class="logo">CareerPilot</div>
-        <div class="brand-text">
-          <div class="title">CareerPilot</div>
-          <div class="subtitle">Professional Career Roadmaps</div>
+        <div class="logo">CC</div>
+        <div>
+          <h2>CareerCraft</h2>
+          <div class="muted">Build your path</div>
         </div>
       </div>
 
-      <nav class="nav-actions">
-        <button id="themeToggle" class="btn btn-ghost">Toggle Theme</button>
-        <div id="authArea" class="auth-area">
-          <!-- Filled by JS: show signup/login or user menu -->
-        </div>
-      </nav>
-    </div>
-  </header>
+      <ul class="menu">
+        <li id="nav-home">🏠 Home</li>
+        <li id="nav-dash">📄 Dashboard</li>
+        <li id="nav-roles">🧑‍🎓 Career Roles</li>
+        <li id="nav-paths">📈 Paths</li>
+        <li id="nav-settings">⚙️ Settings</li>
+      </ul>
 
-  <main class="container grid">
-    <!-- Left column (main dashboard) -->
-    <section class="panel main-panel">
-      <div class="panel-row">
-        <h2 id="welcomeTitle">Welcome</h2>
-        <p id="welcomeSub" class="muted">Please sign up or log in to save roles and generate your roadmap.</p>
+      <div class="theme-row">
+        <button id="themeToggle" class="small-btn">Toggle Theme</button>
+        <div style="margin-left:auto" id="authState"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <div class="top">
+        <div class="welcome">
+          <div class="avatar" id="avatar">G</div>
+          <div>
+            <h1 id="usernameTitle">Welcome, Guest</h1>
+            <p id="subg" class="muted">Personalized career dashboard</p>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center">
+          <button class="small-btn" id="btnRefresh">🔄 Refresh</button>
+          <button class="small-btn" id="btnLogout" style="display:none">Logout</button>
+        </div>
       </div>
 
-      <div class="cards-row">
+      <!-- HERO -->
+      <section class="hero" aria-hidden="false">
+        <div class="hero-left">
+          <h2>Grow your career — the smart way</h2>
+          <p class="muted">Personalized learning roadmap, AI-style recommendations, and visual progress tracking — all in one place.</p>
+          <div style="margin-top:12px; display:flex; gap:10px">
+            <button class="cta">Get Started</button>
+            <button class="small-btn" id="exploreRoles">Explore Roles</button>
+          </div>
+          <div style="margin-top:14px; display:flex; gap:10px;">
+            <div style="padding:8px; border-radius:8px; background:linear-gradient(90deg, rgba(58,160,255,0.08), rgba(123,92,255,0.06));">
+              <strong id="topRole">Top Match: —</strong><div class="muted" id="topSkill">—</div>
+            </div>
+            <div style="padding:8px; border-radius:8px; background:rgba(255,255,255,0.03)">
+              <div class="muted">Progress</div><strong id="heroProg">0%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <!-- Real office photo with futuristic gradient overlay -->
+          <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=2e6a4cdfdf2d6b4f4e7f0e3f4f0b4b9e" alt="office">
+          <div class="hero-overlay" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <!-- CARDS -->
+      <div class="cards">
         <div class="card">
-          <h3>Top Role Match</h3>
-          <p id="roleMatchDisplay">—</p>
+          <h3>Your Role Match</h3>
+          <p id="roleMatch">—</p>
         </div>
+
         <div class="card">
           <h3>Next Skill</h3>
-          <p id="nextSkillDisplay">—</p>
+          <p id="nextSkill">—</p>
         </div>
+
         <div class="card">
           <h3>Progress</h3>
           <p id="levelText">Level 0</p>
-          <div class="progress-outer">
-            <div id="progressBar" class="progress-inner" style="width:0%"></div>
-          </div>
-          <div class="progress-controls">
-            <button id="incProgress" class="btn">+10</button>
-            <button id="decProgress" class="btn btn-light">-10</button>
-            <button id="resetProgress" class="btn btn-danger">Reset</button>
+          <div class="progress" style="margin-top:8px; height:12px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,0.06)">
+            <i id="progressBar" style="display:block; height:100%; width:0%; background: linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .6s"></i>
           </div>
         </div>
       </div>
 
-      <div class="panel-row">
-        <h3>Career Roles (available)</h3>
-        <div id="rolesList" class="roles-list"></div>
-
-        <form id="addRoleForm" class="form-inline" autocomplete="off">
-          <input id="newRoleTitle" placeholder="Add custom role (e.g. DevOps Engineer)" />
-          <input id="newRoleSkill" placeholder="Primary skill (e.g. AWS, Docker)" />
-          <button type="submit" class="btn">Add Role</button>
-        </form>
+      <!-- IMAGE GALLERY (office/futuristic mix) -->
+      <div class="img-grid" style="margin-top:16px">
+        <div class="img-card"><img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop" alt=""><div class="cap">Collaboration</div></div>
+        <div class="img-card"><img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=800&auto=format&fit=crop" alt=""><div class="cap">Design & Focus</div></div>
+        <div class="img-card"><img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=800&auto=format&fit=crop" alt=""><div class="cap">Innovation</div></div>
       </div>
 
-      <div class="panel-row">
-        <h3>Your Saved Roles</h3>
-        <div id="savedRoles" class="roles-list"></div>
-      </div>
-
-      <div class="panel-row">
-        <h3>Roadmap</h3>
-        <div id="pathBox" class="card">
-          <h4 id="pathTitle">No Path Available</h4>
-          <p id="pathDescription" class="muted"></p>
-          <ul id="pathSteps" class="roadmap-list"></ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- Right column (auth + stats) -->
-    <aside class="panel side-panel">
-      <div id="authPanel" class="card">
-        <h3 id="authTitle">Create Account</h3>
-
-        <div id="signupBox">
-          <input id="suName" placeholder="Full name" />
-          <input id="suEmail" placeholder="Email" />
-          <input id="suPass" type="password" placeholder="Password (6+ chars)" />
-          <button id="signupBtn" class="btn">Sign Up</button>
-          <p class="muted small">Already have an account? <a id="showLogin" href="#">Login</a></p>
+      <!-- Charts -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:16px;">
+        <div class="chart-wrap card">
+          <h3 style="margin-top:0">Progress Over Time</h3>
+          <canvas id="lineChart"></canvas>
         </div>
 
-        <div id="loginBox" style="display:none">
-          <input id="liEmail" placeholder="Email" />
-          <input id="liPass" type="password" placeholder="Password" />
-          <button id="loginBtn" class="btn">Login</button>
-          <p class="muted small">New user? <a id="showSignup" href="#">Sign up</a></p>
+        <div class="chart-wrap card">
+          <h3 style="margin-top:0">Skill Radar</h3>
+          <canvas id="radarChart"></canvas>
         </div>
       </div>
 
-      <div class="card">
-        <h3>Progress History</h3>
-        <ul id="historyList" class="muted small"></ul>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+        <div class="chart-wrap card">
+          <h3 style="margin-top:0">Path Recommendation Scores</h3>
+          <canvas id="barChart"></canvas>
+        </div>
+
+        <div class="card">
+          <h3>Career Roles</h3>
+          <div class="roles" id="rolesList"></div>
+        </div>
       </div>
 
-      <div class="card">
-        <h3>Utilities</h3>
-        <button id="exportData" class="btn btn-light">Export Data (JSON)</button>
-        <button id="importDataBtn" class="btn btn-light">Import Data</button>
-        <input id="importFile" type="file" accept=".json" style="display:none" />
+      <!-- Career Path Recommender -->
+      <div id="pathBox" class="card">
+        <h3 id="pathTitle">No Path Available</h3>
+        <p id="pathDescription" class="muted"></p>
+        <h4 style="margin-top:10px">Roadmap</h4>
+        <ul id="pathSteps" class="muted" style="line-height:1.6"></ul>
+      </div>
+
+    </main>
+
+    <!-- RIGHT COLUMN -->
+    <aside class="right-col" id="rightCol">
+      <h3 id="authTitle">Create Account</h3>
+
+      <div id="signupBox">
+        <label>Name</label><input id="suName" placeholder="Your name">
+        <label>Email</label><input id="suEmail" placeholder="email@example.com" type="email">
+        <label>Password</label><input id="suPass" type="password" placeholder="6+ characters">
+        <button class="cta-btn" id="signupBtn">Sign Up</button>
+        <p class="muted">Already have an account? <span id="showLogin" style="text-decoration:underline; cursor:pointer">Login</span></p>
+      </div>
+
+      <div id="loginBox" style="display:none">
+        <label>Email</label><input id="liEmail" type="email" placeholder="email@example.com">
+        <label>Password</label><input id="liPass" type="password" placeholder="password">
+        <button class="cta-btn" id="loginBtn">Login</button>
+        <p class="muted">New user? <span id="showSignup" style="text-decoration:underline; cursor:pointer">Sign up</span></p>
+      </div>
+
+      <div style="margin-top:16px">
+        <h4>Saved Roles</h4>
+        <div id="savedRoles" class="muted">No saved roles yet.</div>
+      </div>
+
+      <div class="chart-wrap" style="margin-top:18px">
+        <h4 style="margin:0 0 8px 0">Quick Actions</h4>
+        <button class="cta-btn" id="btnSaveDemo" style="width:100%">Create Demo User</button>
+        <button class="small-btn" id="btnClear" style="width:100%; margin-top:8px">Clear Data</button>
       </div>
     </aside>
-  </main>
 
-  <footer class="container small muted">
-    CareerPilot — Frontend-only version • Data saved in your browser (localStorage)
-  </footer>
+  </div>
 
-  <script src="script.js"></script>
+  <div class="toast" id="toast">Message</div>
+
+  <!-- ========================= JAVASCRIPT ========================= -->
+  <script>
+  /*********************
+   Utilities & Storage
+  *********************/
+  const STORAGE_USERS = 'cc_users_v1';
+  const STORAGE_LOGGED = 'cc_logged_v1';
+  function readUsers(){ try { return JSON.parse(localStorage.getItem(STORAGE_USERS) || '{}'); } catch(e){ return {}; } }
+  function writeUsers(u){ localStorage.setItem(STORAGE_USERS, JSON.stringify(u)); }
+  function setLogged(email){ if(email) localStorage.setItem(STORAGE_LOGGED, email); else localStorage.removeItem(STORAGE_LOGGED); }
+  function getLogged(){ return localStorage.getItem(STORAGE_LOGGED); }
+
+  function toast(msg, t=2200){ const el = document.getElementById('toast'); el.innerText = msg; el.style.display='block'; setTimeout(()=>el.style.display='none', t); }
+
+  // Demo roles (kept small)
+  const demoRoles = [
+    {id:'r1', title:'Software Developer', match:87, skill:'Data Structures & Algorithms', desc:'Design and implement software systems.'},
+    {id:'r2', title:'Data Scientist', match:74, skill:'Statistics & Feature Engineering', desc:'Analyze data to extract insights.'},
+    {id:'r3', title:'ML Engineer', match:65, skill:'MLOps', desc:'Productionise ML models robustly.'}
+  ];
+
+  /***********************
+   Theme & Mobile Toggle
+  ************************/
+  (function initTheme(){
+    const saved = localStorage.getItem('cc_theme') || 'dark';
+    if(saved === 'light') document.documentElement.setAttribute('data-theme','light');
+    else document.documentElement.removeAttribute('data-theme');
+  })();
+
+  document.getElementById('themeToggle').onclick = ()=>{
+    const cur = document.documentElement.hasAttribute('data-theme') ? 'light' : 'dark';
+    const next = cur === 'light' ? 'dark' : 'light';
+    if(next === 'light') document.documentElement.setAttribute('data-theme','light'); else document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('cc_theme', next);
+    toast(`${next[0].toUpperCase()+next.slice(1)} mode`);
+  };
+
+  // mobile hamburger
+  document.getElementById('hamBtn').addEventListener('click', ()=> document.getElementById('sidebar').classList.add('open'));
+  document.addEventListener('click', (e)=>{
+    const sidebar = document.getElementById('sidebar');
+    if(!sidebar.contains(e.target) && e.target.id !== 'hamBtn') sidebar.classList.remove('open');
+  });
+
+  /***********************
+   AUTH: Signup / Login
+  ************************/
+  function updateAuthUI(){
+    const logged = getLogged();
+    const users = readUsers();
+    const authState = document.getElementById('authState');
+    if(logged && users[logged]){
+      const user = users[logged];
+      document.getElementById('usernameTitle').innerText = `Welcome, ${user.name}`;
+      document.getElementById('avatar').innerText = (user.name || 'U').slice(0,1).toUpperCase();
+      document.getElementById('btnLogout').style.display = 'inline-block';
+      authState.innerHTML = `<button class="small-btn" id="gotoDash">Open Dashboard</button>`;
+      document.getElementById('signupBox').style.display='none'; document.getElementById('loginBox').style.display='none';
+      renderSavedRoles(user.savedRoles || []);
+      renderDashboardForUser(user);
+    } else {
+      document.getElementById('usernameTitle').innerText = 'Welcome, Guest';
+      document.getElementById('avatar').innerText = 'G';
+      document.getElementById('btnLogout').style.display = 'none';
+      authState.innerHTML = '';
+      document.getElementById('signupBox').style.display='block';
+    }
+  }
+
+  // show login / signup toggle
+  document.getElementById('showLogin').addEventListener('click', ()=>{
+    document.getElementById('signupBox').style.display='none';
+    document.getElementById('loginBox').style.display='block';
+    document.getElementById('authTitle').innerText = 'Login';
+  });
+  document.getElementById('showSignup').addEventListener('click', ()=>{
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('signupBox').style.display='block';
+    document.getElementById('authTitle').innerText = 'Create Account';
+  });
+
+  // signup
+  document.getElementById('signupBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('suName').value.trim();
+    const email = document.getElementById('suEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('suPass').value;
+    if(!name || !email || !pass) return toast('Fill all signup fields');
+    if(pass.length < 6) return toast('Password must be at least 6 chars');
+    const users = readUsers();
+    if(users[email]) return toast('User already exists');
+    users[email] = { name, pass, progress: 20, savedRoles: [], history: [{ t: Date.now(), progress: 20 }] };
+    writeUsers(users);
+    setLogged(email);
+    toast('Account created — logged in');
+    updateAuthUI();
+  });
+
+  // login
+  document.getElementById('loginBtn').addEventListener('click', ()=>{
+    const email = document.getElementById('liEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('liPass').value;
+    const users = readUsers();
+    if(!users[email]) return toast('No account found');
+    if(users[email].pass !== pass) return toast('Incorrect password');
+    setLogged(email);
+    toast('Logged in');
+    updateAuthUI();
+  });
+
+  // logout
+  document.getElementById('btnLogout').addEventListener('click', ()=>{
+    setLogged(null); toast('Logged out'); updateAuthUI(); refreshCharts();
+  });
+
+  // demo user
+  document.getElementById('btnSaveDemo').addEventListener('click', ()=>{
+    const users = readUsers();
+    users['demo@cc.test'] = { name:'Demo User', pass:'password', progress:46, savedRoles:['r1','r3'], history:[
+      {t:Date.now()-1000*60*60*24*30, progress:10},
+      {t:Date.now()-1000*60*60*24*14, progress:20},
+      {t:Date.now()-1000*60*60*24*7, progress:33},
+      {t:Date.now()-1000*60*60*24*1, progress:46}
+    ]};
+    writeUsers(users);
+    toast('Demo user created — email demo@cc.test / password password');
+  });
+
+  // clear
+  document.getElementById('btnClear').addEventListener('click', ()=>{
+    localStorage.removeItem(STORAGE_USERS); localStorage.removeItem(STORAGE_LOGGED);
+    toast('Cleared local data'); setTimeout(()=> location.reload(),800);
+  });
+
+  /**************************
+   DASHBOARD & PROGRESS
+  **************************/
+  function renderDashboardForUser(user){
+    if(!user){ // guest
+      document.getElementById('roleMatch').innerText = '—';
+      document.getElementById('nextSkill').innerText = '—';
+      document.getElementById('heroProg').innerText = '0%'; document.getElementById('progressBar').style.width = '0%';
+      updateCharts(null);
+      renderCareerPath(null);
+      return;
+    }
+
+    // show top saved role or fallback
+    const saved = user.savedRoles || [];
+    const primary = saved.length ? demoRoles.find(r=>r.id===saved[0]) : demoRoles[0];
+    document.getElementById('roleMatch').innerText = primary ? `${primary.title} — ${primary.match}%` : '—';
+    document.getElementById('nextSkill').innerText = primary ? primary.skill : '—';
+
+    // progress
+    const p = Math.min(100, user.progress || 0);
+    document.getElementById('heroProg').innerText = p + '%';
+    document.getElementById('progressBar').style.width = p + '%';
+    document.getElementById('levelText').innerText = `Level ${Math.max(1, Math.round(p/25))}`;
+
+    // saved roles list (right column)
+    renderSavedRoles(saved);
+
+    // charts
+    updateCharts(user);
+
+    // recommender
+    renderCareerPath(user);
+  }
+
+  // increment / reset progress (and push to user history)
+  document.getElementById('incProgress').addEventListener('click', ()=>{
+    const logged = getLogged();
+    if(!logged) return toast('Login to update progress');
+    const users = readUsers(); const u = users[logged];
+    u.progress = Math.min(100, (u.progress || 0) + 10);
+    (u.history = u.history || []).push({ t: Date.now(), progress: u.progress });
+    users[logged] = u; writeUsers(users);
+    renderDashboardForUser(u); toast('Progress updated');
+  });
+
+  document.getElementById('resetProgress').addEventListener('click', ()=>{
+    const logged = getLogged();
+    if(!logged) return toast('Login to reset');
+    const users = readUsers(); const u = users[logged];
+    u.progress = 0; (u.history = u.history || []).push({ t: Date.now(), progress: u.progress });
+    users[logged] = u; writeUsers(users);
+    renderDashboardForUser(u); toast('Progress reset');
+  });
+
+  /**************************
+   ROLES UI
+  **************************/
+  function renderRoles(){
+    const wrap = document.getElementById('rolesList'); wrap.innerHTML = '';
+    demoRoles.forEach(r=>{
+      const node = document.createElement('div');
+      node.className = 'role-card';
+      node.innerHTML = `<div><strong>${r.title}</strong><div class="role-desc">${r.desc}</div></div>
+                        <div style="text-align:right"><button class="cta-btn" onclick="saveRole('${r.id}')">Save</button></div>`;
+      wrap.appendChild(node);
+    });
+  }
+  renderRoles();
+
+  window.saveRole = function(roleId){
+    const logged = getLogged();
+    if(!logged) return toast('Login to save roles');
+    const users = readUsers(); const u = users[logged];
+    u.savedRoles = u.savedRoles || [];
+    if(u.savedRoles.includes(roleId)) return toast('Role already saved');
+    u.savedRoles.unshift(roleId);
+    (u.history = u.history || []).push({ t: Date.now(), action: `saved:${roleId}` });
+    users[logged] = u; writeUsers(users);
+    renderSavedRoles(u.savedRoles);
+    renderDashboardForUser(u);
+    toast('Role saved');
+  };
+
+  function renderSavedRoles(list){
+    const box = document.getElementById('savedRoles');
+    if(!list || list.length===0){ box.innerHTML = 'No saved roles yet.'; return; }
+    box.innerHTML = list.map(id=> {
+      const r = demoRoles.find(x=>x.id===id) || { title: id };
+      return `<div style="padding:8px;margin:6px 0;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))">${r.title}</div>`;
+    }).join('');
+  }
+
+  /**************************
+   CHARTS: Line (history), Radar (skills), Bar (path scores)
+  **************************/
+  // initialize charts with placeholders
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  const radarCtx = document.getElementById('radarChart').getContext('2d');
+  const barCtx = document.getElementById('barChart').getContext('2d');
+
+  // default empty charts
+  const lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'Progress', data: [], borderColor: 'rgba(122,98,255,0.95)', backgroundColor: 'rgba(122,98,255,0.08)', fill:true, tension:0.35, pointRadius:4 }] },
+    options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ x:{ display:true }, y:{ min:0, max:100 } } }
+  });
+
+  const radarChart = new Chart(radarCtx, {
+    type: 'radar',
+    data: { labels: ['DSA','Git','JS','React','Backend','Projects'], datasets: [{ label:'Skill Coverage', data: [0,0,0,0,0,0], backgroundColor:'rgba(58,160,255,0.12)', borderColor:'rgba(58,160,255,0.9)', pointBackgroundColor:'rgba(58,160,255,0.9)' }] },
+    options: { responsive:true, scales:{ r:{ beginAtZero:true, max:5 } }, plugins:{ legend:{display:false} } }
+  });
+
+  const barChart = new Chart(barCtx, {
+    type:'bar',
+    data:{ labels: ['Software Dev','Data Scientist','ML Engineer'], datasets:[{ label:'Score', data:[0,0,0], backgroundColor:['rgba(58,160,255,0.8)','rgba(123,92,255,0.8)','rgba(60,200,180,0.8)'] }] },
+    options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, max:200 } } }
+  });
+
+  // helper to refresh charts for a user
+  function updateCharts(user){
+    // Line chart: progress history
+    if(!user || !user.history || user.history.length===0){
+      lineChart.data.labels = ['—']; lineChart.data.datasets[0].data = [0];
+    } else {
+      const hist = (user.history || []).slice(-12); // last 12 entries
+      const labels = hist.map(h=> new Date(h.t).toLocaleDateString());
+      const data = hist.map(h=> h.progress || 0);
+      lineChart.data.labels = labels; lineChart.data.datasets[0].data = data;
+    }
+    lineChart.update();
+
+    // Radar: convert user progress into skill points for primary role
+    const baseLabels = ['DSA','Git','JS','React','Backend','Projects'];
+    let radarValues = [0,0,0,0,0,0];
+    if(user && user.savedRoles && user.savedRoles.length){
+      const primaryId = user.savedRoles[0];
+      const primary = demoRoles.find(r=>r.id===primaryId) || demoRoles[0];
+      // Map skillMap for primary role (smart) -> fill scores based on progress
+      const skillMapObj = {
+        'Software Developer': ['DSA','Git','JS','React','Backend','Projects'],
+        'Data Scientist': ['Python','NumPy','Pandas','Statistics','ML Models','SQL'],
+        'ML Engineer': ['Python','Deep Learning','TensorFlow','PyTorch','Docker','MLOps']
+      };
+      const map = skillMapObj[primary.title] || baseLabels;
+      const progressFactor = (user.progress || 0) / 100;
+      // give points 0..5
+      const points = map.map((s,i)=> Math.round((progressFactor * 5) - (i*0.3) >=0 ? (progressFactor*5 - i*0.2) : 0));
+      // align with baseLabels by mapping if same names exist
+      radarValues = baseLabels.map(lbl => {
+        const idx = map.indexOf(lbl);
+        return idx !== -1 ? Math.max(0, Math.min(5, Math.round(points[idx]))) : Math.max(0, Math.round((progressFactor*3)));
+      });
+    }
+    radarChart.data.labels = baseLabels;
+    radarChart.data.datasets[0].data = radarValues;
+    radarChart.update();
+
+    // Bar chart: compute smart scores for roles
+    const logged = getLogged(); const users = readUsers(); const u = users[logged];
+    let scores = [];
+    if(!u){ scores = [0,0,0]; }
+    else {
+      // compute score per role
+      const computeScore = (user, role) => {
+        let s = role.match * 1.5 + (user.progress||0)*0.8;
+        const skillCount = role.title === 'Software Developer' ? 6 : (role.title==='Data Scientist'?6:6);
+        const learned = Math.floor((user.progress||0)/20);
+        s -= Math.max(0, (skillCount - learned)) * 8;
+        s += Math.random()*5;
+        return Math.round(Math.max(0, s));
+      };
+      scores = demoRoles.map(r => computeScore(u, r));
+    }
+    barChart.data.datasets[0].data = scores;
+    barChart.update();
+
+    // hero top info
+    if(user){
+      const primary = (user.savedRoles && user.savedRoles.length) ? demoRoles.find(r=>r.id===user.savedRoles[0]) : demoRoles[0];
+      document.getElementById('topRole').innerText = `Top Match: ${primary.title}`;
+      document.getElementById('topSkill').innerText = primary.skill;
+      document.getElementById('heroProg').innerText = `${user.progress || 0}%`;
+    } else {
+      document.getElementById('topRole').innerText = 'Top Match: —';
+      document.getElementById('topSkill').innerText = '—';
+      document.getElementById('heroProg').innerText = '0%';
+    }
+  }
+
+  function refreshCharts(){ const logged=getLogged(); const users=readUsers(); updateCharts(users[logged]); }
+
+  /******************************
+   Career Path Recommender (AI-like)
+  *******************************/
+  const skillMap = {
+    "Software Developer": ["DSA","Git","JavaScript","React","Backend","Projects"],
+    "Data Scientist": ["Python","NumPy","Pandas","Statistics","ML Models","SQL"],
+    "ML Engineer": ["Python","Deep Learning","TensorFlow","PyTorch","Docker","MLOps"]
+  };
+
+  const resourcesDB = {
+    "DSA": [{name:"Striver DSA Sheet", url:"https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/"}],
+    "JavaScript":[{name:"MDN JS", url:"https://developer.mozilla.org/en-US/docs/Web/JavaScript"}],
+    "Python":[{name:"Python Tutorial", url:"https://docs.python.org/3/tutorial/"}],
+    "MLOps":[{name:"MLOps Roadmap", url:"https://roadmap.sh/mlops"}]
+  };
+
+  function aiPhrase(){
+    const phrases = ["After analyzing your profile:","Based on your progress and saved roles:","Our AI recommends:"];
+    return phrases[Math.floor(Math.random()*phrases.length)];
+  }
+
+  function computeSmartScore(user, role){
+    let score = 0;
+    score += role.match * 1.5;
+    score += (user.progress || 0) * 0.8;
+    const required = (skillMap[role.title] || []).length;
+    const learned = Math.floor((user.progress || 0)/20);
+    const gap = Math.max(0, required - learned);
+    score -= gap * 8;
+    score += Math.random()*5;
+    return score;
+  }
+
+  function computeSmartPath(user){
+    if(!user || !(user.savedRoles && user.savedRoles.length)) return null;
+    let best = demoRoles[0], highest = -Infinity;
+    demoRoles.forEach(r => {
+      const s = computeSmartScore(user, r);
+      if(s > highest){ highest = s; best = r; }
+    });
+    const pathDefs = {
+      "Software Developer": { desc:"Full-stack development path.", steps:["Programming basics","DSA","Frontend (React)","Backend (Node)","Full-stack projects","Interview prep"] },
+      "Data Scientist": { desc:"Data science path.", steps:["Python","Pandas & NumPy","Statistics","ML models","Model evaluation","Project case studies"] },
+      "ML Engineer": { desc:"Production ML path.", steps:["ML fundamentals","Deep learning","Model optimization","Docker","MLOps tools","Deploy & monitor"] }
+    };
+    return { title:best.title, desc: pathDefs[best.title].desc, steps: pathDefs[best.title].steps, primary:best };
+  }
+
+  function computeSkillGap(user, roleTitle){
+    const required = skillMap[roleTitle] || [];
+    const learnedCount = Math.floor((user.progress || 0)/20);
+    return required.slice(learnedCount);
+  }
+
+  function getResources(skills){
+    let list = [];
+    skills.forEach(s => { if(resourcesDB[s]) list.push(...resourcesDB[s]); });
+    return list.slice(0,6);
+  }
+
+  function renderCareerPath(user){
+    const titleEl = document.getElementById('pathTitle');
+    const descEl = document.getElementById('pathDescription');
+    const stepsEl = document.getElementById('pathSteps');
+    if(!user){ titleEl.innerText = 'No Path Available'; descEl.innerText = 'Login and save roles to generate a roadmap.'; stepsEl.innerHTML = ''; return; }
+    const path = computeSmartPath(user);
+    if(!path){ titleEl.innerText = 'No Path Found'; descEl.innerText = 'Save at least one role.'; stepsEl.innerHTML = ''; return; }
+    const gaps = computeSkillGap(user, path.title);
+    const resources = getResources(gaps);
+    titleEl.innerHTML = `${aiPhrase()} <strong>${path.title} Path</strong>`;
+    descEl.innerText = path.desc;
+    stepsEl.innerHTML = path.steps.map(s => `<li>${s}</li>`).join('');
+    if(gaps.length) stepsEl.innerHTML += `<br><strong>Skill Gaps:</strong> ${gaps.join(', ')}`;
+    if(resources.length){
+      stepsEl.innerHTML += `<br><br><strong>Resources:</strong><br>` + resources.map(r=>`<div><a href="${r.url}" target="_blank" style="color:var(--accent)">${r.name}</a></div>`).join('');
+    }
+  }
+
+  /******************************
+   Initial UI & helpers
+  ******************************/
+  function renderSavedRoles(list){
+    const box = document.getElementById('savedRoles');
+    if(!list || list.length === 0){ box.innerHTML = 'No saved roles yet.'; return; }
+    box.innerHTML = list.map(id => {
+      const r = demoRoles.find(x=>x.id===id) || { title:id };
+      return `<div style="padding:8px;margin:6px 0;border-radius:8px;background:rgba(255,255,255,0.03)">${r.title}</div>`;
+    }).join('');
+  }
+
+  function renderUI(){
+    const logged = getLogged(); const users = readUsers(); const u = users[logged];
+    updateAuthUI();
+    renderDashboardForUser(u);
+  }
+
+  // For external triggers (refresh)
+  document.getElementById('btnRefresh').addEventListener('click', ()=>{ renderUI(); toast('Refreshed'); });
+
+  // initial load
+  renderUI();
+
+  // watch for login navigation
+  document.body.addEventListener('click', e=>{
+    if(e.target && e.target.id === 'gotoDash'){ document.querySelector('.main').scrollIntoView({behavior:'smooth'}); }
+  });
+
+  // accessibility escape to close sidebar
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') document.getElementById('sidebar').classList.remove('open'); });
+
+  // periodically refresh charts if logged in changes (e.g., demo user created)
+  setInterval(()=> refreshCharts(), 2500);
+  </script>
+
 </body>
 </html>
