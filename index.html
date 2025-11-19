@@ -1,626 +1,127 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareerCraft – AI Career Dashboard</title>
-
-    <style>
-        :root{
-            --bg1:#0a0f24;
-            --bg2:#0e1b3f;
-            --bg3:#0b2b6b;
-            --accent:#2d6cdf;
-            --text:#ffffff;
-            --muted:#d1dcff;
-            --card:rgba(255,255,255,0.06);
-        }
-        [data-theme="light"]{
-            --bg1:#f0f3ff;
-            --bg2:#e6ecff;
-            --bg3:#dce6ff;
-            --accent:#1b4eb3;
-            --text:#0d152f;
-            --muted:#333a55;
-            --card:rgba(0,0,0,0.06);
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
-            color: var(--text);
-            height: 100vh;
-            overflow-x: hidden;
-            display:flex;
-        }
-
-        /* Layout */
-        .layout {
-            display: grid;
-            grid-template-columns: 240px 1fr 320px;
-            width:100%;
-            gap:20px;
-            padding:20px;
-        }
-
-        @media(max-width:1100px){
-            .layout { grid-template-columns: 220px 1fr; }
-            .signup { display:none; }
-        }
-        @media(max-width:768px){
-            .layout { grid-template-columns: 1fr; padding:10px; }
-            .signup{ display:none; }
-            .sidebar { 
-                position:fixed;
-                top:0; left:-260px;
-                width:240px;
-                height:100%;
-                transition:.3s ease;
-                z-index:50;
-            }
-            .sidebar.open { left:0; }
-        }
-
-        /* Hamburger */
-        .ham-btn{
-            display:none;
-            position:fixed;
-            top:15px; left:15px;
-            z-index:60;
-            background:rgba(255,255,255,0.2);
-            padding:10px 14px;
-            border-radius:6px;
-            cursor:pointer;
-            backdrop-filter:blur(5px);
-        }
-        @media(max-width:768px){
-            .ham-btn{ display:block; }
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background: rgba(0,0,0,0.4);
-            padding: 20px;
-            border-radius: 12px;
-            backdrop-filter: blur(6px);
-        }
-        .sidebar .logo {
-            text-align: center;
-            margin-bottom: 20px;
-            color: var(--accent);
-        }
-        .menu li {
-            list-style: none;
-            padding: 10px 0;
-            cursor: pointer;
-            color: var(--muted);
-        }
-        .menu li:hover {
-            color: var(--text);
-        }
-
-        /* Main Dashboard */
-        .main {
-            padding: 40px;
-            background: rgba(255,255,255,0.03);
-            border-radius:16px;
-            backdrop-filter:blur(8px);
-        }
-
-        .profile-cards {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .p-card {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 10px;
-            width: 250px;
-            backdrop-filter: blur(8px);
-            box-shadow:0 4px 10px rgba(0,0,0,0.3);
-            transition:.3s;
-        }
-        .p-card:hover{
-            transform: translateY(-6px);
-        }
-
-        /* Signup Section */
-        .signup {
-            background: var(--card);
-            padding: 30px;
-            border-radius:12px;
-            backdrop-filter:blur(8px);
-        }
-        .signup input {
-            padding: 10px;
-            border:none;
-            border-radius:6px;
-            width:100%;
-            margin-bottom:12px;
-        }
-
-        .cta-btn {
-            margin-top: 10px;
-            padding: 12px;
-            background: var(--accent);
-            border:none;
-            border-radius:5px;
-            color:white;
-            cursor:pointer;
-            transition:.2s;
-        }
-        .cta-btn:hover {
-            transform: scale(1.05);
-        }
-
-        /* Roles */
-        .roles {
-            display:grid;
-            gap:16px;
-            margin-top:25px;
-        }
-        .role-card{
-            background: var(--card);
-            padding:16px;
-            border-radius:10px;
-            cursor:pointer;
-        }
-        .role-desc{
-            display:none;
-            margin-top:8px;
-            color:var(--muted);
-        }
-        .role-card.open .role-desc{
-            display:block;
-        }
-
-        /* Progress bar */
-        .progress {
-            height: 10px;
-            width: 100%;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            overflow:hidden;
-            margin-top:8px;
-        }
-        .progress i {
-            display:block;
-            height:100%;
-            width: 0%;
-            background: linear-gradient(90deg,#79a7ff,#2d6cdf);
-            transition:.3s;
-        }
-
-        /* Toast */
-        .toast{
-            position:fixed;
-            left:50%; bottom:20px;
-            transform:translateX(-50%);
-            background:rgba(0,0,0,0.55);
-            padding:10px 16px;
-            border-radius:10px;
-            display:none;
-            color:white;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CareerPilot — Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
+  <header class="topnav">
+    <div class="container topnav-inner">
+      <div class="brand">
+        <div class="logo">CareerPilot</div>
+        <div class="brand-text">
+          <div class="title">CareerPilot</div>
+          <div class="subtitle">Professional Career Roadmaps</div>
+        </div>
+      </div>
 
-    <!-- Hamburger for mobile -->
-    <div class="ham-btn" id="hamBtn">☰</div>
-
-    <div class="layout">
-
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <h2 class="logo">CareerCraft</h2>
-            <ul class="menu">
-                <li>🏠 Home</li>
-                <li>📄 Dashboard</li>
-                <li>🧑‍🎓 Career Roles</li>
-                <li>⚙️ Settings</li>
-                <li><button id="themeToggle" class="cta-btn" style="padding:6px 10px;font-size:13px;">Toggle Theme</button></li>
-            </ul>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main">
-
-            <section class="profile">
-                <h1 id="usernameTitle">Welcome, Guest</h1>
-                <p>Your personalized career dashboard.</p>
-
-                <div class="profile-cards">
-                    <div class="p-card">
-                        <h3>Your Role Match</h3>
-                        <p id="roleMatch">—</p>
-                    </div>
-
-                    <div class="p-card">
-                        <h3>Next Skill to Learn</h3>
-                        <p id="nextSkill">—</p>
-                    </div>
-
-                    <div class="p-card">
-                        <h3>Progress</h3>
-                        <p id="levelText">Level 1</p>
-
-                        <div class="progress">
-                            <i id="progressBar"></i>
-                        </div>
-
-                        <button class="cta-btn" id="incProgress">Increase</button>
-                        <button class="cta-btn" style="background:red;margin-top:8px;" id="resetProgress">Reset</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Career Roles -->
-            <h2 style="margin-top:40px;">Career Roles</h2>
-            <div class="roles" id="rolesList"></div>
-
-            <!-- Career Path Recommender -->
-            <h2 style="margin-top:40px;">Career Path Recommender</h2>
-            <p class="muted">Based on your saved roles, here is your personalized learning roadmap:</p>
-
-            <div id="pathBox" style="
-                background:rgba(255,255,255,0.06);
-                padding:20px;
-                border-radius:12px;
-                margin-top:16px;
-                backdrop-filter:blur(6px);
-            ">
-                <h3 id="pathTitle">No Path Available</h3>
-                <p id="pathDescription" style="color:var(--muted); font-size:14px;"></p>
-                <h4 style="margin-top:20px;">Roadmap</h4>
-                <ul id="pathSteps" style="color:var(--muted); font-size:14px; line-height:1.6;"></ul>
-            </div>
-
-        </main>
-
-        <!-- Signup / Login -->
-        <section class="signup">
-            <h2 id="authTitle">Create Account</h2>
-
-            <!-- Signup -->
-            <div id="signupBox">
-                <input type="text" id="suName" placeholder="Name">
-                <input type="email" id="suEmail" placeholder="Email">
-                <input type="password" id="suPass" placeholder="Password">
-                <button class="cta-btn" id="signupBtn">Sign Up</button>
-                <p>Already have an account? <span id="showLogin" style="cursor:pointer;text-decoration:underline;">Login</span></p>
-            </div>
-
-            <!-- Login -->
-            <div id="loginBox" style="display:none;">
-                <input type="email" id="liEmail" placeholder="Email">
-                <input type="password" id="liPass" placeholder="Password">
-                <button class="cta-btn" id="loginBtn">Login</button>
-                <p>New user? <span id="showSignup" style="cursor:pointer;text-decoration:underline;">Sign Up</span></p>
-            </div>
-
-            <h4 style="margin-top:20px;">Saved Roles</h4>
-            <div id="savedRoles" style="color:var(--muted);font-size:14px;">No saved roles yet.</div>
-        </section>
-
+      <nav class="nav-actions">
+        <button id="themeToggle" class="btn btn-ghost">Toggle Theme</button>
+        <div id="authArea" class="auth-area">
+          <!-- Filled by JS: show signup/login or user menu -->
+        </div>
+      </nav>
     </div>
+  </header>
 
-    <!-- Toast -->
-    <div class="toast" id="toast">Message</div>
+  <main class="container grid">
+    <!-- Left column (main dashboard) -->
+    <section class="panel main-panel">
+      <div class="panel-row">
+        <h2 id="welcomeTitle">Welcome</h2>
+        <p id="welcomeSub" class="muted">Please sign up or log in to save roles and generate your roadmap.</p>
+      </div>
 
-    <!-- ======================= JAVASCRIPT ======================= -->
-    <script>
-/* THEME */
-function applyTheme(mode){
-    if(mode==="light") document.documentElement.setAttribute("data-theme","light");
-    else document.documentElement.removeAttribute("data-theme");
-    localStorage.setItem("theme",mode);
-}
-applyTheme(localStorage.getItem("theme") || "dark");
+      <div class="cards-row">
+        <div class="card">
+          <h3>Top Role Match</h3>
+          <p id="roleMatchDisplay">—</p>
+        </div>
+        <div class="card">
+          <h3>Next Skill</h3>
+          <p id="nextSkillDisplay">—</p>
+        </div>
+        <div class="card">
+          <h3>Progress</h3>
+          <p id="levelText">Level 0</p>
+          <div class="progress-outer">
+            <div id="progressBar" class="progress-inner" style="width:0%"></div>
+          </div>
+          <div class="progress-controls">
+            <button id="incProgress" class="btn">+10</button>
+            <button id="decProgress" class="btn btn-light">-10</button>
+            <button id="resetProgress" class="btn btn-danger">Reset</button>
+          </div>
+        </div>
+      </div>
 
-document.getElementById("themeToggle").onclick = () => {
-    let light = document.documentElement.getAttribute("data-theme")==="light";
-    applyTheme(light ? "dark" : "light");
-};
+      <div class="panel-row">
+        <h3>Career Roles (available)</h3>
+        <div id="rolesList" class="roles-list"></div>
 
-/* SIDEBAR */
-document.getElementById("hamBtn").onclick = () => 
-    document.getElementById("sidebar").classList.add("open");
+        <form id="addRoleForm" class="form-inline" autocomplete="off">
+          <input id="newRoleTitle" placeholder="Add custom role (e.g. DevOps Engineer)" />
+          <input id="newRoleSkill" placeholder="Primary skill (e.g. AWS, Docker)" />
+          <button type="submit" class="btn">Add Role</button>
+        </form>
+      </div>
 
-document.addEventListener("click",(e)=>{
-    let s=document.getElementById("sidebar");
-    if(!s.contains(e.target) && e.target.id!=="hamBtn"){
-        s.classList.remove("open");
-    }
-});
+      <div class="panel-row">
+        <h3>Your Saved Roles</h3>
+        <div id="savedRoles" class="roles-list"></div>
+      </div>
 
-/* TOAST */
-function toast(msg){
-    let t=document.getElementById("toast");
-    t.innerText=msg; t.style.display="block";
-    setTimeout(()=>t.style.display="none",2000);
-}
+      <div class="panel-row">
+        <h3>Roadmap</h3>
+        <div id="pathBox" class="card">
+          <h4 id="pathTitle">No Path Available</h4>
+          <p id="pathDescription" class="muted"></p>
+          <ul id="pathSteps" class="roadmap-list"></ul>
+        </div>
+      </div>
+    </section>
 
-/* USERS */
-function readUsers(){ return JSON.parse(localStorage.getItem("users")||"{}"); }
-function writeUsers(u){ localStorage.setItem("users",JSON.stringify(u)); }
-function setLogged(e){ e ? localStorage.setItem("logged",e) : localStorage.removeItem("logged"); }
+    <!-- Right column (auth + stats) -->
+    <aside class="panel side-panel">
+      <div id="authPanel" class="card">
+        <h3 id="authTitle">Create Account</h3>
 
-/* DEMO ROLES */
-const demoRoles=[
-    {id:"r1",title:"Software Developer",match:87,skill:"DSA",desc:"Build scalable software."},
-    {id:"r2",title:"Data Scientist",match:74,skill:"Statistics",desc:"Analyze and model data."},
-    {id:"r3",title:"ML Engineer",match:65,skill:"MLOps",desc:"Deploy ML models."}
-];
+        <div id="signupBox">
+          <input id="suName" placeholder="Full name" />
+          <input id="suEmail" placeholder="Email" />
+          <input id="suPass" type="password" placeholder="Password (6+ chars)" />
+          <button id="signupBtn" class="btn">Sign Up</button>
+          <p class="muted small">Already have an account? <a id="showLogin" href="#">Login</a></p>
+        </div>
 
-/* SIGNUP / LOGIN */
-document.getElementById("showLogin").onclick=()=>{
-    signupBox.style.display="none";
-    loginBox.style.display="block";
-    authTitle.innerText="Login";
-};
-document.getElementById("showSignup").onclick=()=>{
-    loginBox.style.display="none";
-    signupBox.style.display="block";
-    authTitle.innerText="Create Account";
-};
+        <div id="loginBox" style="display:none">
+          <input id="liEmail" placeholder="Email" />
+          <input id="liPass" type="password" placeholder="Password" />
+          <button id="loginBtn" class="btn">Login</button>
+          <p class="muted small">New user? <a id="showSignup" href="#">Sign up</a></p>
+        </div>
+      </div>
 
-document.getElementById("signupBtn").onclick=()=>{
-    let name=suName.value.trim(), email=suEmail.value.trim().toLowerCase(), pass=suPass.value;
-    if(!name||!email||!pass) return toast("Fill all fields");
-    if(pass.length<6) return toast("Password must be 6+ chars");
+      <div class="card">
+        <h3>Progress History</h3>
+        <ul id="historyList" class="muted small"></ul>
+      </div>
 
-    let users=readUsers();
-    if(users[email]) return toast("User exists");
+      <div class="card">
+        <h3>Utilities</h3>
+        <button id="exportData" class="btn btn-light">Export Data (JSON)</button>
+        <button id="importDataBtn" class="btn btn-light">Import Data</button>
+        <input id="importFile" type="file" accept=".json" style="display:none" />
+      </div>
+    </aside>
+  </main>
 
-    users[email]={name,pass,progress:20,savedRoles:[]};
-    writeUsers(users); setLogged(email); updateUI(); toast("Signup successful");
-};
+  <footer class="container small muted">
+    CareerPilot — Frontend-only version • Data saved in your browser (localStorage)
+  </footer>
 
-document.getElementById("loginBtn").onclick=()=>{
-    let email=liEmail.value.trim().toLowerCase(), pass=liPass.value;
-    let users=readUsers();
-    if(!users[email]) return toast("User not found");
-    if(users[email].pass!==pass) return toast("Wrong password");
-    setLogged(email); updateUI(); toast("Logged in");
-};
-
-/* DASHBOARD */
-function updateUI(){
-    let logged=localStorage.getItem("logged"), users=readUsers(), u=users[logged];
-
-    if(!u){
-        usernameTitle.innerText="Welcome, Guest";
-        renderCareerPath(null);
-        return;
-    }
-
-    usernameTitle.innerText="Welcome, "+u.name;
-    progressBar.style.width=u.progress+"%";
-    levelText.innerText="Level "+Math.max(1,Math.round(u.progress/25));
-
-    if(u.savedRoles.length){
-        let r=demoRoles.find(x=>x.id===u.savedRoles[0])||demoRoles[0];
-        roleMatch.innerText=r.title+" – "+r.match+"%";
-        nextSkill.innerText=r.skill;
-    }
-
-    renderSavedRoles(u.savedRoles);
-    renderCareerPath(u);
-}
-
-incProgress.onclick=()=>{
-    let logged=localStorage.getItem("logged");
-    if(!logged) return toast("Login first");
-    let users=readUsers();
-    users[logged].progress=Math.min(100,users[logged].progress+10);
-    writeUsers(users); updateUI();
-};
-resetProgress.onclick=()=>{
-    let logged=localStorage.getItem("logged");
-    if(!logged) return toast("Login first");
-    let users=readUsers();
-    users[logged].progress=0;
-    writeUsers(users); updateUI();
-};
-
-/* ROLES */
-function renderRoles(){
-    rolesList.innerHTML="";
-    demoRoles.forEach(r=>{
-        let div=document.createElement("div");
-        div.className="role-card"; div.dataset.id=r.id;
-        div.innerHTML=`
-            <strong>${r.title}</strong> – ${r.match}%
-            <button class="cta-btn" style="float:right;padding:6px" onclick="saveRole('${r.id}')">Save</button>
-            <div class="role-desc">${r.desc}</div>
-        `;
-        div.onclick=()=>div.classList.toggle("open");
-        rolesList.appendChild(div);
-    });
-}
-renderRoles();
-
-function saveRole(id){
-    event.stopPropagation();
-    let logged=localStorage.getItem("logged");
-    if(!logged) return toast("Login first");
-    let users=readUsers(), u=users[logged];
-    if(!u.savedRoles.includes(id)) u.savedRoles.unshift(id);
-    writeUsers(users); updateUI(); toast("Saved");
-}
-
-function renderSavedRoles(list){
-    if(list.length===0){ savedRoles.innerHTML="No saved roles yet."; return; }
-    savedRoles.innerHTML=list.map(id=>{
-        let r=demoRoles.find(x=>x.id===id);
-        return `<div style="padding:6px;background:rgba(255,255,255,0.1);margin:4px 0;border-radius:6px;">
-            ${r.title}
-        </div>`;
-    }).join("");
-}
-
-/* =========================
-   AI CAREER RECOMMENDER
-========================= */
-const skillMap={
-    "Software Developer":["DSA","Git","JavaScript","React","Backend","Projects"],
-    "Data Scientist":["Python","NumPy","Pandas","Statistics","ML Models","SQL"],
-    "ML Engineer":["Python","Deep Learning","TensorFlow","PyTorch","Docker","MLOps"]
-};
-
-const resourcesDB={
-    "DSA":[
-        {name:"Striver DSA Sheet",url:"https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/"},
-        {name:"Babbar DSA Playlist",url:"https://www.youtube.com/watch?v=3j0SWDX4AtU"}
-    ],
-    "Python":[
-        {name:"Python FreeCodeCamp",url:"https://www.youtube.com/watch?v=rfscVS0vtbw"},
-        {name:"Python Docs",url:"https://docs.python.org/3/tutorial/"}
-    ],
-    "ML Models":[
-        {name:"Google ML Crash Course",url:"https://developers.google.com/machine-learning/crash-course"}
-    ],
-    "MLOps":[
-        {name:"MLOps Roadmap",url:"https://roadmap.sh/mlops"}
-    ]
-};
-
-function aiPhrase(){
-    const p=[
-        "After analyzing your interests:",
-        "Based on your saved roles:",
-        "Here is your recommended path:",
-        "Our AI suggests this roadmap:",
-        "Your skills align best with:"
-    ];
-    return p[Math.floor(Math.random()*p.length)];
-}
-
-function computeSmartScore(user,role){
-    let score=0;
-    score+=role.match*1.5;
-    score+=user.progress*0.8;
-
-    let learned=Math.floor(user.progress/20);
-    let required=skillMap[role.title].length;
-    let gap=required-learned;
-
-    score-=gap*8;
-    score+=Math.random()*5;
-
-    return score;
-}
-
-function computeSmartPath(user){
-    if(!user||!user.savedRoles.length) return null;
-
-    let best=null, max=-999;
-
-    demoRoles.forEach(r=>{
-        let s=computeSmartScore(user,r);
-        if(s>max){ max=s; best=r; }
-    });
-
-    return{
-        title:best.title,
-        desc:paths[best.title].desc,
-        steps:paths[best.title].steps
-    };
-}
-
-const paths={
-    "Software Developer":{
-        desc:"Full-stack learning roadmap.",
-        steps:[
-            "Learn basics (JS/Python)",
-            "Master DSA",
-            "Learn Git/GitHub",
-            "Learn React",
-            "Backend: Node.js",
-            "Build 3 full-stack projects"
-        ]
-    },
-    "Data Scientist":{
-        desc:"Data science mastery roadmap.",
-        steps:[
-            "Learn Python",
-            "Master Pandas & NumPy",
-            "Statistics fundamentals",
-            "Train ML models",
-            "SQL for data",
-            "Build ML case studies"
-        ]
-    },
-    "ML Engineer":{
-        desc:"ML deployment roadmap.",
-        steps:[
-            "Python + ML basics",
-            "Deep Learning",
-            "TensorFlow/PyTorch",
-            "Docker basics",
-            "MLOps tools",
-            "Deploy ML models"
-        ]
-    }
-};
-
-function computeSkillGap(user,roleTitle){
-    let req=skillMap[roleTitle];
-    let learnt=Math.floor(user.progress/20);
-    return req.slice(learnt);
-}
-
-function getResources(skills){
-    let arr=[];
-    skills.forEach(s=>{
-        if(resourcesDB[s]) arr.push(...resourcesDB[s]);
-    });
-    return arr.slice(0,5);
-}
-
-function renderCareerPath(user){
-    let title=pathTitle, desc=pathDescription, steps=pathSteps;
-
-    if(!user){
-        title.innerText="No Path Available";
-        desc.innerText="Save roles to generate a roadmap.";
-        steps.innerHTML="";
-        return;
-    }
-
-    let path=computeSmartPath(user);
-    if(!path){
-        title.innerText="No Path Found";
-        desc.innerText="Save at least one role.";
-        steps.innerHTML="";
-        return;
-    }
-
-    let gaps=computeSkillGap(user,path.title);
-    let resources=getResources(gaps);
-
-    title.innerHTML=aiPhrase()+"<br><br><strong>"+path.title+" Path</strong>";
-    desc.innerText=path.desc;
-
-    steps.innerHTML=path.steps.map(x=>`<li>${x}</li>`).join("");
-
-    if(gaps.length)
-        steps.innerHTML+=`<br><strong>Skill Gaps:</strong> ${gaps.join(", ")}`;
-
-    if(resources.length){
-        steps.innerHTML+="<br><br><strong>Recommended Resources:</strong><br>";
-        resources.forEach(r=>{
-            steps.innerHTML+=`<div><a href="${r.url}" target="_blank" style="color:#79a7ff;">• ${r.name}</a></div>`;
-        });
-    }
-}
-
-/* INITIAL LOAD */
-updateUI();
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
