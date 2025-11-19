@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareerCraft – Dashboard</title>
+    <title>CareerCraft – AI Career Dashboard</title>
 
     <style>
-        /* SAME THEME SYSTEM FROM THE DEMO */
         :root{
             --bg1:#0a0f24;
             --bg2:#0e1b3f;
@@ -36,7 +35,7 @@
             display:flex;
         }
 
-        /* Layout now responsive */
+        /* Layout */
         .layout {
             display: grid;
             grid-template-columns: 240px 1fr 320px;
@@ -108,6 +107,7 @@
             border-radius:16px;
             backdrop-filter:blur(8px);
         }
+
         .profile-cards {
             display: flex;
             gap: 20px;
@@ -155,7 +155,7 @@
             transform: scale(1.05);
         }
 
-        /* Career Role Cards */
+        /* Roles */
         .roles {
             display:grid;
             gap:16px;
@@ -221,7 +221,6 @@
                 <li>🏠 Home</li>
                 <li>📄 Dashboard</li>
                 <li>🧑‍🎓 Career Roles</li>
-                <li>📈 Paths</li>
                 <li>⚙️ Settings</li>
                 <li><button id="themeToggle" class="cta-btn" style="padding:6px 10px;font-size:13px;">Toggle Theme</button></li>
             </ul>
@@ -234,7 +233,6 @@
                 <h1 id="usernameTitle">Welcome, Guest</h1>
                 <p>Your personalized career dashboard.</p>
 
-                <!-- Dashboard Cards -->
                 <div class="profile-cards">
                     <div class="p-card">
                         <h3>Your Role Match</h3>
@@ -263,6 +261,23 @@
             <!-- Career Roles -->
             <h2 style="margin-top:40px;">Career Roles</h2>
             <div class="roles" id="rolesList"></div>
+
+            <!-- Career Path Recommender -->
+            <h2 style="margin-top:40px;">Career Path Recommender</h2>
+            <p class="muted">Based on your saved roles, here is your personalized learning roadmap:</p>
+
+            <div id="pathBox" style="
+                background:rgba(255,255,255,0.06);
+                padding:20px;
+                border-radius:12px;
+                margin-top:16px;
+                backdrop-filter:blur(6px);
+            ">
+                <h3 id="pathTitle">No Path Available</h3>
+                <p id="pathDescription" style="color:var(--muted); font-size:14px;"></p>
+                <h4 style="margin-top:20px;">Roadmap</h4>
+                <ul id="pathSteps" style="color:var(--muted); font-size:14px; line-height:1.6;"></ul>
+            </div>
 
         </main>
 
@@ -293,209 +308,319 @@
 
     </div>
 
-    <!-- Toast Message -->
+    <!-- Toast -->
     <div class="toast" id="toast">Message</div>
 
+    <!-- ======================= JAVASCRIPT ======================= -->
     <script>
-        /* ========================
-           Theme Switch
-        ======================== */
-        function applyTheme(t){
-            if(t==="light") document.documentElement.setAttribute("data-theme","light");
-            else document.documentElement.removeAttribute("data-theme");
-            localStorage.setItem("theme",t);
-        }
-        applyTheme(localStorage.getItem("theme") || "dark");
+/* THEME */
+function applyTheme(mode){
+    if(mode==="light") document.documentElement.setAttribute("data-theme","light");
+    else document.documentElement.removeAttribute("data-theme");
+    localStorage.setItem("theme",mode);
+}
+applyTheme(localStorage.getItem("theme") || "dark");
 
-        document.getElementById("themeToggle").onclick = () => {
-            let t = document.documentElement.getAttribute("data-theme")==="light"?"dark":"light";
-            applyTheme(t);
-        };
+document.getElementById("themeToggle").onclick = () => {
+    let light = document.documentElement.getAttribute("data-theme")==="light";
+    applyTheme(light ? "dark" : "light");
+};
 
-        /* Mobile Sidebar */
-        const hamBtn = document.getElementById("hamBtn");
-        const sidebar = document.getElementById("sidebar");
-        hamBtn.onclick = () => sidebar.classList.add("open");
-        document.onclick = (e)=>{
-            if(!sidebar.contains(e.target) && !hamBtn.contains(e.target)){
-                sidebar.classList.remove("open");
-            }
-        };
+/* SIDEBAR */
+document.getElementById("hamBtn").onclick = () => 
+    document.getElementById("sidebar").classList.add("open");
 
-        /* Toast */
-        function toast(msg){
-            let t = document.getElementById("toast");
-            t.innerText = msg;
-            t.style.display="block";
-            setTimeout(()=>t.style.display="none",2000);
-        }
+document.addEventListener("click",(e)=>{
+    let s=document.getElementById("sidebar");
+    if(!s.contains(e.target) && e.target.id!=="hamBtn"){
+        s.classList.remove("open");
+    }
+});
 
-        /* ========================
-           LocalStorage Auth
-        ======================== */
-        function readUsers(){
-            return JSON.parse(localStorage.getItem("users") || "{}");
-        }
-        function writeUsers(a){
-            localStorage.setItem("users", JSON.stringify(a));
-        }
-        function setLogged(email){
-            if(email) localStorage.setItem("logged",email);
-            else localStorage.removeItem("logged");
-        }
+/* TOAST */
+function toast(msg){
+    let t=document.getElementById("toast");
+    t.innerText=msg; t.style.display="block";
+    setTimeout(()=>t.style.display="none",2000);
+}
 
-        /* ========================
-           Signup & Login
-        ======================== */
-        const signupBox=document.getElementById("signupBox");
-        const loginBox=document.getElementById("loginBox");
-        const authTitle=document.getElementById("authTitle");
+/* USERS */
+function readUsers(){ return JSON.parse(localStorage.getItem("users")||"{}"); }
+function writeUsers(u){ localStorage.setItem("users",JSON.stringify(u)); }
+function setLogged(e){ e ? localStorage.setItem("logged",e) : localStorage.removeItem("logged"); }
 
-        document.getElementById("showLogin").onclick = ()=>{
-            signupBox.style.display="none";
-            loginBox.style.display="block";
-            authTitle.innerText="Login";
-        };
-        document.getElementById("showSignup").onclick = ()=>{
-            loginBox.style.display="none";
-            signupBox.style.display="block";
-            authTitle.innerText="Create Account";
-        };
+/* DEMO ROLES */
+const demoRoles=[
+    {id:"r1",title:"Software Developer",match:87,skill:"DSA",desc:"Build scalable software."},
+    {id:"r2",title:"Data Scientist",match:74,skill:"Statistics",desc:"Analyze and model data."},
+    {id:"r3",title:"ML Engineer",match:65,skill:"MLOps",desc:"Deploy ML models."}
+];
 
-        document.getElementById("signupBtn").onclick = ()=>{
-            let name=suName.value.trim();
-            let email=suEmail.value.trim().toLowerCase();
-            let pass=suPass.value;
+/* SIGNUP / LOGIN */
+document.getElementById("showLogin").onclick=()=>{
+    signupBox.style.display="none";
+    loginBox.style.display="block";
+    authTitle.innerText="Login";
+};
+document.getElementById("showSignup").onclick=()=>{
+    loginBox.style.display="none";
+    signupBox.style.display="block";
+    authTitle.innerText="Create Account";
+};
 
-            if(!name||!email||!pass) return toast("Fill all fields");
-            if(pass.length<6) return toast("Password too short");
+document.getElementById("signupBtn").onclick=()=>{
+    let name=suName.value.trim(), email=suEmail.value.trim().toLowerCase(), pass=suPass.value;
+    if(!name||!email||!pass) return toast("Fill all fields");
+    if(pass.length<6) return toast("Password must be 6+ chars");
 
-            let users=readUsers();
-            if(users[email]) return toast("User exists");
+    let users=readUsers();
+    if(users[email]) return toast("User exists");
 
-            users[email]={name,pass,progress:20,savedRoles:[]};
-            writeUsers(users);
-            setLogged(email);
-            updateUI();
-            toast("Account created");
-        };
+    users[email]={name,pass,progress:20,savedRoles:[]};
+    writeUsers(users); setLogged(email); updateUI(); toast("Signup successful");
+};
 
-        document.getElementById("loginBtn").onclick = ()=>{
-            let email=liEmail.value.trim().toLowerCase();
-            let pass=liPass.value;
-            let users=readUsers();
+document.getElementById("loginBtn").onclick=()=>{
+    let email=liEmail.value.trim().toLowerCase(), pass=liPass.value;
+    let users=readUsers();
+    if(!users[email]) return toast("User not found");
+    if(users[email].pass!==pass) return toast("Wrong password");
+    setLogged(email); updateUI(); toast("Logged in");
+};
 
-            if(!users[email]) return toast("No such user");
-            if(users[email].pass!==pass) return toast("Wrong password");
+/* DASHBOARD */
+function updateUI(){
+    let logged=localStorage.getItem("logged"), users=readUsers(), u=users[logged];
 
-            setLogged(email);
-            updateUI();
-            toast("Logged in");
-        };
+    if(!u){
+        usernameTitle.innerText="Welcome, Guest";
+        renderCareerPath(null);
+        return;
+    }
 
-        /* ========================
-           Dashboard
-        ======================== */
-        function updateUI(){
-            let logged=localStorage.getItem("logged");
-            let users=readUsers();
-            let u=users[logged];
+    usernameTitle.innerText="Welcome, "+u.name;
+    progressBar.style.width=u.progress+"%";
+    levelText.innerText="Level "+Math.max(1,Math.round(u.progress/25));
 
-            if(!u){
-                document.getElementById("usernameTitle").innerText="Welcome, Guest";
-                return;
-            }
+    if(u.savedRoles.length){
+        let r=demoRoles.find(x=>x.id===u.savedRoles[0])||demoRoles[0];
+        roleMatch.innerText=r.title+" – "+r.match+"%";
+        nextSkill.innerText=r.skill;
+    }
 
-            document.getElementById("usernameTitle").innerText="Welcome, "+u.name;
+    renderSavedRoles(u.savedRoles);
+    renderCareerPath(u);
+}
 
-            progressBar.style.width=u.progress+"%";
-            levelText.innerText="Level "+Math.max(1,Math.round(u.progress/25));
+incProgress.onclick=()=>{
+    let logged=localStorage.getItem("logged");
+    if(!logged) return toast("Login first");
+    let users=readUsers();
+    users[logged].progress=Math.min(100,users[logged].progress+10);
+    writeUsers(users); updateUI();
+};
+resetProgress.onclick=()=>{
+    let logged=localStorage.getItem("logged");
+    if(!logged) return toast("Login first");
+    let users=readUsers();
+    users[logged].progress=0;
+    writeUsers(users); updateUI();
+};
 
-            if(u.savedRoles[0]){
-                let role = demoRoles.find(r=>r.id===u.savedRoles[0]) || demoRoles[0];
-                roleMatch.innerText = role.title+" – "+role.match+"%";
-                nextSkill.innerText=role.skill;
-            } else {
-                roleMatch.innerText="—";
-                nextSkill.innerText="—";
-            }
+/* ROLES */
+function renderRoles(){
+    rolesList.innerHTML="";
+    demoRoles.forEach(r=>{
+        let div=document.createElement("div");
+        div.className="role-card"; div.dataset.id=r.id;
+        div.innerHTML=`
+            <strong>${r.title}</strong> – ${r.match}%
+            <button class="cta-btn" style="float:right;padding:6px" onclick="saveRole('${r.id}')">Save</button>
+            <div class="role-desc">${r.desc}</div>
+        `;
+        div.onclick=()=>div.classList.toggle("open");
+        rolesList.appendChild(div);
+    });
+}
+renderRoles();
 
-            renderSavedRoles(u.savedRoles);
-        }
+function saveRole(id){
+    event.stopPropagation();
+    let logged=localStorage.getItem("logged");
+    if(!logged) return toast("Login first");
+    let users=readUsers(), u=users[logged];
+    if(!u.savedRoles.includes(id)) u.savedRoles.unshift(id);
+    writeUsers(users); updateUI(); toast("Saved");
+}
 
-        /* ========================
-           Progress Buttons
-        ======================== */
-        incProgress.onclick = ()=>{
-            let logged=localStorage.getItem("logged");
-            if(!logged) return toast("Login first");
+function renderSavedRoles(list){
+    if(list.length===0){ savedRoles.innerHTML="No saved roles yet."; return; }
+    savedRoles.innerHTML=list.map(id=>{
+        let r=demoRoles.find(x=>x.id===id);
+        return `<div style="padding:6px;background:rgba(255,255,255,0.1);margin:4px 0;border-radius:6px;">
+            ${r.title}
+        </div>`;
+    }).join("");
+}
 
-            let users=readUsers();
-            let u=users[logged];
-            u.progress=Math.min(100,u.progress+10);
-            writeUsers(users);
-            updateUI();
-        };
+/* =========================
+   AI CAREER RECOMMENDER
+========================= */
+const skillMap={
+    "Software Developer":["DSA","Git","JavaScript","React","Backend","Projects"],
+    "Data Scientist":["Python","NumPy","Pandas","Statistics","ML Models","SQL"],
+    "ML Engineer":["Python","Deep Learning","TensorFlow","PyTorch","Docker","MLOps"]
+};
 
-        resetProgress.onclick = ()=>{
-            let logged=localStorage.getItem("logged");
-            if(!logged) return toast("Login first");
+const resourcesDB={
+    "DSA":[
+        {name:"Striver DSA Sheet",url:"https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/"},
+        {name:"Babbar DSA Playlist",url:"https://www.youtube.com/watch?v=3j0SWDX4AtU"}
+    ],
+    "Python":[
+        {name:"Python FreeCodeCamp",url:"https://www.youtube.com/watch?v=rfscVS0vtbw"},
+        {name:"Python Docs",url:"https://docs.python.org/3/tutorial/"}
+    ],
+    "ML Models":[
+        {name:"Google ML Crash Course",url:"https://developers.google.com/machine-learning/crash-course"}
+    ],
+    "MLOps":[
+        {name:"MLOps Roadmap",url:"https://roadmap.sh/mlops"}
+    ]
+};
 
-            let users=readUsers();
-            users[logged].progress=0;
-            writeUsers(users);
-            updateUI();
-        };
+function aiPhrase(){
+    const p=[
+        "After analyzing your interests:",
+        "Based on your saved roles:",
+        "Here is your recommended path:",
+        "Our AI suggests this roadmap:",
+        "Your skills align best with:"
+    ];
+    return p[Math.floor(Math.random()*p.length)];
+}
 
-        /* ========================
-           Roles
-        ======================== */
-        const demoRoles = [
-            {id:"r1",title:"Software Developer",match:87,skill:"DSA",desc:"Create scalable apps."},
-            {id:"r2",title:"Data Scientist",match:74,skill:"Statistics",desc:"Analyze and model data."},
-            {id:"r3",title:"ML Engineer",match:65,skill:"MLOps",desc:"Deploy ML models."},
-        ];
+function computeSmartScore(user,role){
+    let score=0;
+    score+=role.match*1.5;
+    score+=user.progress*0.8;
 
-        function renderRoles(){
-            rolesList.innerHTML="";
-            demoRoles.forEach(r=>{
-                let div=document.createElement("div");
-                div.className="role-card";
-                div.dataset.id=r.id;
-                div.innerHTML=`
-                    <strong>${r.title}</strong> – ${r.match}%
-                    <button class="cta-btn" style="float:right;padding:6px 10px;" onclick="saveRole('${r.id}')">Save</button>
-                    <div class="role-desc">${r.desc}</div>
-                `;
-                div.onclick=()=>div.classList.toggle("open");
-                rolesList.appendChild(div);
-            });
-        }
-        renderRoles();
+    let learned=Math.floor(user.progress/20);
+    let required=skillMap[role.title].length;
+    let gap=required-learned;
 
-        function saveRole(id){
-            let logged=localStorage.getItem("logged");
-            if(!logged) return toast("Login first");
+    score-=gap*8;
+    score+=Math.random()*5;
 
-            let users=readUsers();
-            let u=users[logged];
-            if(!u.savedRoles.includes(id)) u.savedRoles.unshift(id);
-            writeUsers(users);
-            toast("Saved");
-            updateUI();
-        }
+    return score;
+}
 
-        function renderSavedRoles(list){
-            let box=document.getElementById("savedRoles");
-            if(list.length===0) return box.innerHTML="No saved roles yet.";
-            box.innerHTML=list.map(id=>{
-                let r=demoRoles.find(x=>x.id===id);
-                return `<div style="background:rgba(255,255,255,0.1);margin:6px 0;padding:6px;border-radius:6px;">${r.title}</div>`;
-            }).join("");
-        }
+function computeSmartPath(user){
+    if(!user||!user.savedRoles.length) return null;
 
-        updateUI();
+    let best=null, max=-999;
+
+    demoRoles.forEach(r=>{
+        let s=computeSmartScore(user,r);
+        if(s>max){ max=s; best=r; }
+    });
+
+    return{
+        title:best.title,
+        desc:paths[best.title].desc,
+        steps:paths[best.title].steps
+    };
+}
+
+const paths={
+    "Software Developer":{
+        desc:"Full-stack learning roadmap.",
+        steps:[
+            "Learn basics (JS/Python)",
+            "Master DSA",
+            "Learn Git/GitHub",
+            "Learn React",
+            "Backend: Node.js",
+            "Build 3 full-stack projects"
+        ]
+    },
+    "Data Scientist":{
+        desc:"Data science mastery roadmap.",
+        steps:[
+            "Learn Python",
+            "Master Pandas & NumPy",
+            "Statistics fundamentals",
+            "Train ML models",
+            "SQL for data",
+            "Build ML case studies"
+        ]
+    },
+    "ML Engineer":{
+        desc:"ML deployment roadmap.",
+        steps:[
+            "Python + ML basics",
+            "Deep Learning",
+            "TensorFlow/PyTorch",
+            "Docker basics",
+            "MLOps tools",
+            "Deploy ML models"
+        ]
+    }
+};
+
+function computeSkillGap(user,roleTitle){
+    let req=skillMap[roleTitle];
+    let learnt=Math.floor(user.progress/20);
+    return req.slice(learnt);
+}
+
+function getResources(skills){
+    let arr=[];
+    skills.forEach(s=>{
+        if(resourcesDB[s]) arr.push(...resourcesDB[s]);
+    });
+    return arr.slice(0,5);
+}
+
+function renderCareerPath(user){
+    let title=pathTitle, desc=pathDescription, steps=pathSteps;
+
+    if(!user){
+        title.innerText="No Path Available";
+        desc.innerText="Save roles to generate a roadmap.";
+        steps.innerHTML="";
+        return;
+    }
+
+    let path=computeSmartPath(user);
+    if(!path){
+        title.innerText="No Path Found";
+        desc.innerText="Save at least one role.";
+        steps.innerHTML="";
+        return;
+    }
+
+    let gaps=computeSkillGap(user,path.title);
+    let resources=getResources(gaps);
+
+    title.innerHTML=aiPhrase()+"<br><br><strong>"+path.title+" Path</strong>";
+    desc.innerText=path.desc;
+
+    steps.innerHTML=path.steps.map(x=>`<li>${x}</li>`).join("");
+
+    if(gaps.length)
+        steps.innerHTML+=`<br><strong>Skill Gaps:</strong> ${gaps.join(", ")}`;
+
+    if(resources.length){
+        steps.innerHTML+="<br><br><strong>Recommended Resources:</strong><br>";
+        resources.forEach(r=>{
+            steps.innerHTML+=`<div><a href="${r.url}" target="_blank" style="color:#79a7ff;">• ${r.name}</a></div>`;
+        });
+    }
+}
+
+/* INITIAL LOAD */
+updateUI();
     </script>
 </body>
 </html>
-
